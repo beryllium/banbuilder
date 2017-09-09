@@ -123,5 +123,39 @@ class CensorTest extends TestCase
     $this->assertEquals('fuck dumb ass ***** **** Mass', $string['clean']);
   }
 
+    /**
+     * @dataProvider sevenDirtyWordsProvider
+     */
+  public function testSevenWords($clean, $matched, $orig)
+  {
+      $censor   = new CensorWords;
+      $expected = [
+          'orig'    => $orig,
+          'clean'   => $clean,
+          'matched' => $matched,
+      ];
+      $actual   = $censor->censorString($orig);
+      $this->assertSame($expected, $actual);
+  }
 
+  public function sevenDirtyWordsProvider()
+  {
+      // identify datasets by a recognizable key
+      $words = [
+          'shit'         => ['clean' => '****', 'matched' => ['shit']],
+          'piss'         => ['clean' => '****', 'matched' => ['piss']],
+          'fuck'         => ['clean' => '****', 'matched' => ['fuck']],
+          'cunt'         => ['clean' => '****', 'matched' => ['cunt']],
+          'cocksucker'   => ['clean' => '****sucker', 'matched' => ['cock']],
+          'motherfucker' => ['clean' => 'mother****er', 'matched' => ['fuck']],     // "He says motherfucker is a duplication of the word fuck, technically, because fuck is the root form, motherfucker being derivative; therefore, it constitutes duplication. And I said, 'Hey, motherfucker, how did you get my phone number, anyway?'"
+          'tits'         => ['clean' => 'tits', 'matched' => []],     // ("New Nabisco Tits! ...corn tits, cheese tits, tater tits!")
+      ];
+
+      // we already had to write each one twice, let's automate away the third
+      return array_map(
+          function ($data, $key) {$data['orig'] = $key; return $data;},
+          $words,
+          array_keys($words)
+      );
+  }
 }
